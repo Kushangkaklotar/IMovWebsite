@@ -5,6 +5,11 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Sync dynamic admin configuration across DOM
+  if (typeof applyConfigToDOM === 'function') {
+    applyConfigToDOM();
+  }
+
   initAmbientCanvas();
   initScrollEffects();
   initMobileNav();
@@ -193,7 +198,7 @@ function initDownloadFlow() {
   let countdownTimer = null;
   let progressInterval = null;
 
-  function openDownloadModal(versionName = 'v12.4 Official') {
+  function openDownloadModal() {
     if (!modal) return;
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -206,7 +211,7 @@ function initDownloadFlow() {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
       </svg>
-      Scanning for malware & verifying safety certificate...
+      Scanning for malware &amp; verifying safety certificate...
     `;
 
     // Progress bar animation
@@ -244,16 +249,22 @@ function initDownloadFlow() {
   }
 
   function triggerActualDownload() {
-    const apkUrl = 'downloads/imov-v12.4-official.apk';
+    const config = typeof getSiteConfig === 'function' ? getSiteConfig() : null;
+    const apkUrl = typeof getActiveApkDownloadUrl === 'function' 
+      ? getActiveApkDownloadUrl(config) 
+      : 'downloads/imov-v12.4-official.apk';
+    const fileName = (config && config.apkFileName) ? config.apkFileName : 'IMov-v12.4-Official.apk';
+
     const tempAnchor = document.createElement('a');
     tempAnchor.href = apkUrl;
-    tempAnchor.setAttribute('download', 'IMov-v12.4-Official.apk');
+    tempAnchor.setAttribute('download', fileName);
     document.body.appendChild(tempAnchor);
     tempAnchor.click();
     document.body.removeChild(tempAnchor);
 
     if (directLinkBtn) {
       directLinkBtn.href = apkUrl;
+      directLinkBtn.setAttribute('download', fileName);
       directLinkBtn.style.display = 'inline-flex';
     }
   }
@@ -269,8 +280,7 @@ function initDownloadFlow() {
   downloadTriggers.forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      const version = btn.getAttribute('data-version') || 'v12.4 Official';
-      openDownloadModal(version);
+      openDownloadModal();
     });
   });
 
@@ -403,15 +413,19 @@ function initRecentDownloadToasts() {
 
   if (!toast || !toastUser) return;
 
+  const config = typeof getSiteConfig === 'function' ? getSiteConfig() : null;
+  const appVersion = (config && config.version) ? config.version : 'v12.4';
+  const appName = (config && config.appName) ? config.appName : 'IMov';
+
   const downloadEvents = [
-    { location: 'Mumbai, India', version: 'IMov APK v12.4', time: '1 min ago' },
-    { location: 'Ahmedabad, Gujarat', version: 'IMov APK v12.4', time: '2 mins ago' },
-    { location: 'London, UK', version: 'IMov for Android TV', time: '4 mins ago' },
-    { location: 'Delhi, India', version: 'IMov Ultra HD APK', time: 'Just now' },
-    { location: 'Toronto, Canada', version: 'IMov APK v12.4', time: '3 mins ago' },
-    { location: 'Surat, Gujarat', version: 'IMov Lite (14MB)', time: '5 mins ago' },
-    { location: 'Dubai, UAE', version: 'IMov APK v12.4', time: '2 mins ago' },
-    { location: 'Bengaluru, India', version: 'IMov APK v12.4', time: 'Just now' }
+    { location: 'Mumbai, India', version: `${appName} APK ${appVersion}`, time: '1 min ago' },
+    { location: 'Ahmedabad, Gujarat', version: `${appName} APK ${appVersion}`, time: '2 mins ago' },
+    { location: 'London, UK', version: `${appName} for Android TV`, time: '4 mins ago' },
+    { location: 'Delhi, India', version: `${appName} Cinema 4K APK`, time: 'Just now' },
+    { location: 'Toronto, Canada', version: `${appName} APK ${appVersion}`, time: '3 mins ago' },
+    { location: 'Surat, Gujarat', version: `${appName} Lite (14MB)`, time: '5 mins ago' },
+    { location: 'Dubai, UAE', version: `${appName} APK ${appVersion}`, time: '2 mins ago' },
+    { location: 'Bengaluru, India', version: `${appName} APK ${appVersion}`, time: 'Just now' }
   ];
 
   let eventIndex = 0;
