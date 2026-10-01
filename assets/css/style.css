@@ -68,7 +68,7 @@ body {
   font-family: var(--font-main);
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  line-height: 1.65;
+  line-height: 1.8;
   overflow-x: hidden;
   position: relative;
   min-height: 100vh;
@@ -126,7 +126,7 @@ body {
   width: 100%;
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 2rem;
   position: relative;
   z-index: 1;
 }
@@ -154,15 +154,15 @@ h1, h2, h3, h4, h5, h6 {
 
 .section-header {
   text-align: center;
-  max-width: 760px;
-  margin: 0 auto 3.5rem auto;
+  max-width: 780px;
+  margin: 0 auto 4.5rem auto;
 }
 
 .section-tag {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.4rem 1rem;
+  padding: 0.45rem 1.15rem;
   background: rgba(168, 85, 247, 0.12);
   border: 1px solid rgba(168, 85, 247, 0.3);
   border-radius: var(--radius-full);
@@ -170,19 +170,21 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 1rem;
+  letter-spacing: 1.2px;
+  margin-bottom: 1.25rem;
 }
 
 .section-title {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
+  font-size: 2.6rem;
+  margin-bottom: 1.25rem;
   letter-spacing: -0.5px;
+  line-height: 1.25;
 }
 
 .section-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   color: var(--text-secondary);
+  line-height: 1.75;
 }
 
 /* Links & Buttons */
@@ -426,7 +428,7 @@ a {
    Hero Section
    ========================================================================== */
 .hero-section {
-  padding: 4.5rem 0 5rem 0;
+  padding: 6.5rem 0 6rem 0;
   position: relative;
   overflow: hidden;
 }
@@ -435,7 +437,7 @@ a {
   display: grid;
   grid-template-columns: 1.15fr 0.85fr;
   align-items: center;
-  gap: 3.5rem;
+  gap: 4.5rem;
 }
 
 .hero-content {
@@ -454,7 +456,7 @@ a {
   font-size: 0.88rem;
   font-weight: 600;
   color: #e9d5ff;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .hero-badge-pill .pill-star {
@@ -464,16 +466,16 @@ a {
 .hero-title {
   font-size: 3.6rem;
   font-weight: 800;
-  line-height: 1.12;
+  line-height: 1.15;
   letter-spacing: -1px;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
 }
 
 .hero-desc {
   font-size: 1.2rem;
   color: var(--text-secondary);
-  line-height: 1.7;
-  margin-bottom: 2rem;
+  line-height: 1.8;
+  margin-bottom: 2.75rem;
   max-width: 620px;
 }
 
@@ -481,8 +483,8 @@ a {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
 }
 
 .btn-apk-main {
@@ -831,7 +833,7 @@ a {
    Stats Bar
    ========================================================================== */
 .stats-section {
-  padding: 2rem 0;
+  padding: 3.5rem 0;
   position: relative;
   z-index: 5;
 }
@@ -839,13 +841,13 @@ a {
 .stats-card-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  gap: 2rem;
   background: var(--bg-card);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-xl);
-  padding: 2.2rem 2.5rem;
+  padding: 2.8rem 3rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
@@ -882,22 +884,52 @@ a {
 }
 
 /* ==========================================================================
+   Ambient Section Dividers (Eliminates Cramped/Cluttered Feel)
+   ========================================================================== */
+.specs-section,
+.features-section,
+.comparison-section,
+.install-section,
+.safety-section,
+.testimonials-section,
+.faq-section {
+  position: relative;
+}
+
+.specs-section::before,
+.features-section::before,
+.comparison-section::before,
+.install-section::before,
+.safety-section::before,
+.testimonials-section::before,
+.faq-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 1px;
+  background: radial-gradient(ellipse at center, rgba(168, 85, 247, 0.3) 0%, rgba(236, 72, 153, 0.12) 55%, transparent 85%);
+  pointer-events: none;
+}
+
+/* ==========================================================================
    App Specifications Table
    ========================================================================== */
 .specs-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
 }
 
 .specs-card-wrap {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2.5rem;
+  gap: 3.5rem;
   background: var(--grad-card);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-xl);
-  padding: 3rem;
+  padding: 3.8rem 3.5rem;
   position: relative;
   overflow: hidden;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
@@ -980,8 +1012,8 @@ a {
 }
 
 .specs-table td {
-  padding: 0.9rem 1.25rem;
-  font-size: 0.95rem;
+  padding: 1.15rem 1.5rem;
+  font-size: 0.98rem;
 }
 
 .specs-table td:first-child {
@@ -1011,7 +1043,7 @@ a {
    Download Hub Section
    ========================================================================== */
 .download-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
   position: relative;
 }
 
@@ -1019,7 +1051,7 @@ a {
   background: linear-gradient(145deg, rgba(22, 28, 62, 0.85) 0%, rgba(13, 16, 38, 0.95) 100%);
   border: 1px solid rgba(168, 85, 247, 0.3);
   border-radius: var(--radius-xl);
-  padding: 4rem 3rem;
+  padding: 5rem 3.5rem;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 40px rgba(168, 85, 247, 0.15);
   text-align: center;
   max-width: 960px;
@@ -1112,8 +1144,8 @@ a {
 .mirrors-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-top: 2.5rem;
+  gap: 2rem;
+  margin-top: 3.5rem;
   text-align: left;
 }
 
@@ -1121,7 +1153,7 @@ a {
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 1.8rem;
   transition: all var(--transition-normal);
   display: flex;
   flex-direction: column;
@@ -1185,13 +1217,13 @@ a {
    Features Section
    ========================================================================== */
 .features-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
 }
 
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .feature-card {
@@ -1200,7 +1232,7 @@ a {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-xl);
-  padding: 2.2rem;
+  padding: 2.6rem 2.2rem;
   position: relative;
   transition: all var(--transition-normal);
   display: flex;
@@ -1236,9 +1268,9 @@ a {
 }
 
 .feature-desc {
-  font-size: 0.95rem;
+  font-size: 0.98rem;
   color: var(--text-secondary);
-  line-height: 1.65;
+  line-height: 1.75;
   margin-bottom: 1.5rem;
   flex-grow: 1;
 }
@@ -1260,20 +1292,20 @@ a {
    Content Preview Showcase (Live Catalog)
    ========================================================================== */
 .catalog-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
 }
 
 .catalog-tabs-nav {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 3rem;
+  margin-bottom: 3.5rem;
 }
 
 .tab-btn {
-  padding: 0.75rem 1.6rem;
+  padding: 0.8rem 1.75rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: var(--text-secondary);
@@ -1299,7 +1331,7 @@ a {
 .catalog-cards-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.75rem;
+  gap: 2rem;
 }
 
 .movie-poster-card {
@@ -1412,7 +1444,7 @@ a {
    Comparison Section (IMov vs Paid OTT)
    ========================================================================== */
 .comparison-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
 }
 
 .comparison-table-wrapper {
@@ -1433,7 +1465,7 @@ a {
 
 .comp-table th,
 .comp-table td {
-  padding: 1.25rem 1.5rem;
+  padding: 1.4rem 1.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -1491,7 +1523,7 @@ a {
    Installation Guides Section
    ========================================================================== */
 .install-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
 }
 
 .install-tab-container {
@@ -1502,8 +1534,8 @@ a {
 .install-device-nav {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 3rem;
+  gap: 1.25rem;
+  margin-bottom: 3.5rem;
   flex-wrap: wrap;
 }
 
@@ -1546,7 +1578,7 @@ a {
 .steps-flow-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .step-card {
@@ -1555,7 +1587,7 @@ a {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-xl);
-  padding: 2rem 1.5rem;
+  padding: 2.5rem 1.8rem;
   position: relative;
   text-align: center;
   transition: all var(--transition-normal);
@@ -1599,21 +1631,21 @@ a {
    Safety & Antivirus Certifications
    ========================================================================== */
 .safety-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
 }
 
 .safety-card {
   background: var(--grad-card);
   border: 1px solid rgba(16, 185, 129, 0.3);
   border-radius: var(--radius-xl);
-  padding: 3.5rem;
+  padding: 4.2rem 3.8rem;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px rgba(16, 185, 129, 0.1);
 }
 
 .safety-grid {
   display: grid;
   grid-template-columns: 1fr 1.2fr;
-  gap: 3rem;
+  gap: 3.5rem;
   align-items: center;
 }
 
@@ -1690,15 +1722,15 @@ a {
    FAQ Section
    ========================================================================== */
 .faq-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
 }
 
 .faq-accordion-wrap {
-  max-width: 860px;
+  max-width: 880px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
 .faq-item {
@@ -1722,7 +1754,7 @@ a {
 
 .faq-question {
   width: 100%;
-  padding: 1.4rem 1.75rem;
+  padding: 1.6rem 2rem;
   background: transparent;
   border: none;
   color: #fff;
@@ -1768,13 +1800,13 @@ a {
    User Testimonials
    ========================================================================== */
 .testimonials-section {
-  padding: 6rem 0;
+  padding: 8.5rem 0;
 }
 
 .reviews-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 2rem;
+  gap: 2.5rem;
 }
 
 .review-card {
@@ -1783,7 +1815,7 @@ a {
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-glass);
   border-radius: var(--radius-xl);
-  padding: 2rem;
+  padding: 2.4rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -2061,7 +2093,7 @@ a {
 .site-footer {
   background: #05060d;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 5rem 0 2rem 0;
+  padding: 6.5rem 0 2.5rem 0;
   position: relative;
   z-index: 1;
 }
@@ -2069,8 +2101,8 @@ a {
 .footer-top {
   display: grid;
   grid-template-columns: 1.5fr 1fr 1fr 1fr;
-  gap: 3rem;
-  margin-bottom: 3.5rem;
+  gap: 3.5rem;
+  margin-bottom: 4rem;
 }
 
 .footer-brand-desc {
@@ -2208,6 +2240,28 @@ a {
 }
 
 @media (max-width: 768px) {
+  .hero-section {
+    padding: 4.5rem 0 4rem 0;
+  }
+
+  .specs-section,
+  .download-section,
+  .features-section,
+  .catalog-section,
+  .comparison-section,
+  .install-section,
+  .safety-section,
+  .testimonials-section,
+  .faq-section {
+    padding: 5rem 0;
+  }
+
+  .specs-card-wrap,
+  .download-hub-card,
+  .safety-card {
+    padding: 2.5rem 1.5rem;
+  }
+
   .hero-title {
     font-size: 2.5rem;
   }

@@ -4,10 +4,9 @@
  */
 
 const IMOV_STORAGE_KEY = 'imov_site_config';
-const IMOV_BLOB_KEY = 'imov_uploaded_apk_blob';
 
 const DEFAULT_IMOV_CONFIG = {
-  appName: "IMov APK",
+  appName: "IMOV",
   version: "v12.4",
   fileSize: "24.8 MB",
   androidVersion: "Android 5.0 to Android 16+",
@@ -18,7 +17,7 @@ const DEFAULT_IMOV_CONFIG = {
   languages: "Hindi, English, Spanish + 40 Languages",
   safetyStatus: "Passed (0 Security Threats)",
   lastUpdated: "Latest 2026 Edition",
-  announcement: "⚡ NEW RELEASE: IMov v12.4 is now live with 4K Cinema Streaming & Ad-Free Player!",
+  announcement: "⚡ <strong>LATEST RELEASE:</strong> IMOV v12.4 Official APK (24.8 MB) &mdash; 4K Cinema Streaming &amp; Ad-Free Player!",
   heroTitle: "Stream Any Movie & Web Series",
   heroSubtitle: "Experience cinema-grade entertainment in stunning 4K Ultra HD & Dolby Atmos. Watch latest Hollywood blockbusters, Bollywood releases, Netflix & Prime originals, and trending Asian dramas with zero subscription, zero registration, and zero buffer.",
   apkDownloadUrl: "downloads/imov-v12.4-official.apk",
@@ -29,15 +28,32 @@ const DEFAULT_IMOV_CONFIG = {
  * Retrieve current configuration (localStorage or defaults)
  */
 function getSiteConfig() {
+  let config = { ...DEFAULT_IMOV_CONFIG };
   try {
     const stored = localStorage.getItem(IMOV_STORAGE_KEY);
     if (stored) {
-      return { ...DEFAULT_IMOV_CONFIG, ...JSON.parse(stored) };
+      config = { ...config, ...JSON.parse(stored) };
     }
   } catch (e) {
     console.warn('Failed to parse stored IMov config:', e);
   }
-  return { ...DEFAULT_IMOV_CONFIG };
+
+  // Ensure appName is IMOV
+  if (!config.appName || config.appName === 'IMov APK' || config.appName === 'IMov') {
+    config.appName = 'IMOV';
+  }
+
+  // If a custom APK was uploaded to IndexedDB, its metadata is cached
+  if (typeof getCachedApkMeta === 'function') {
+    const cachedMeta = getCachedApkMeta();
+    if (cachedMeta && cachedMeta.hasCustomApk) {
+      if (cachedMeta.fileName) config.apkFileName = cachedMeta.fileName;
+      if (cachedMeta.fileSize) config.fileSize = cachedMeta.fileSize;
+      if (cachedMeta.version) config.version = cachedMeta.version;
+    }
+  }
+
+  return config;
 }
 
 /**
@@ -60,7 +76,9 @@ function saveSiteConfig(newConfig) {
 function resetSiteConfig() {
   try {
     localStorage.removeItem(IMOV_STORAGE_KEY);
-    localStorage.removeItem(IMOV_BLOB_KEY);
+    if (typeof deleteApkFromIndexedDB === 'function') {
+      deleteApkFromIndexedDB();
+    }
     return true;
   } catch (e) {
     return false;
@@ -73,9 +91,23 @@ function resetSiteConfig() {
 function applyConfigToDOM(config) {
   if (!config) config = getSiteConfig();
 
-  // Announcement bar
+  // Announcement bar - dynamic original version name
   const annEl = document.querySelector('[data-sync="announcement"]');
-  if (annEl) annEl.textContent = config.announcement;
+  if (annEl) {
+    let annText = config.announcement;
+    // If announcement is the legacy default or mentions old hardcoded v12.4 is now live with, update to dynamic version format
+    if (!annText || annText.includes('is now live with') || annText.includes('IMov v12.4')) {
+      annText = `⚡ <strong>LATEST RELEASE:</strong> ${config.appName} ${config.version} Official APK (${config.fileSize}) &mdash; 4K Cinema Streaming &amp; Ad-Free Player!`;
+    }
+    annEl.innerHTML = annText;
+  }
+
+  // Top announcement download CTA
+  const annCta = document.querySelector('.announcement-bar .trigger-download');
+  if (annCta) {
+    annCta.setAttribute('data-version', `${config.version} Official`);
+    annCta.innerHTML = `Download ${config.version} APK &rarr;`;
+  }
 
   // App Name
   document.querySelectorAll('[data-sync="appName"]').forEach(el => {
@@ -130,13 +162,6 @@ function applyConfigToDOM(config) {
     document.title = `${config.appName} Download (Official ${config.version}) For Android - Free Movies & Web Series`;
   }
 
-  // Update Download Buttons & Links
-  const activeApkUrl = getActiveApkDownloadUrl(config);
-  document.querySelectorAll('a.btn-download-hero, a.btn-apk-main, #direct-download-action').forEach(btn => {
-    btn.setAttribute('href', activeApkUrl);
-    btn.setAttribute('download', config.apkFileName || 'IMov-Official.apk');
-  });
-
   // Meta string on Hero CTA
   const heroMeta = document.querySelector('[data-sync="heroMeta"]');
   if (heroMeta) {
@@ -148,16 +173,28 @@ function applyConfigToDOM(config) {
   if (stickyMeta) {
     stickyMeta.textContent = `Free • ${config.fileSize} • ${config.androidVersion.split(' to ')[0] || 'Android 5.0+'}`;
   }
-}
 
-/**
- * Returns either an uploaded Blob URL or the configured URL
- */
-function getActiveApkDownloadUrl(config) {
-  if (!config) config = getSiteConfig();
-  const uploadedBlobUrl = localStorage.getItem(IMOV_BLOB_KEY);
-  if (uploadedBlobUrl) {
-    return uploadedBlobUrl;
+  // Update download attributes and hrefs on buttons
+  const fileName = config.apkFileName || 'IMov-Official.apk';
+  document.querySelectorAll('a.btn-download-hero, a.btn-apk-main, #direct-download-action').forEach(btn => {
+    btn.setAttribute('download', fileName);
+    btn.setAttribute('data-version', config.version + ' Official');
+    if (config.apkDownloadUrl) {
+      btn.setAttribute('href', config.apkDownloadUrl);
+    }
+  });
+
+  // If a binary APK is stored in IndexedDB, update direct download anchors to point to its active blob URL
+  if (typeof getApkFromIndexedDB === 'function') {
+    getApkFromIndexedDB().then(stored => {
+      if (stored && stored.blob) {
+        const liveBlobUrl = URL.createObjectURL(stored.blob);
+        const customName = stored.fileName || fileName;
+        document.querySelectorAll('a.btn-download-hero, a.btn-apk-main, #direct-download-action').forEach(btn => {
+          btn.setAttribute('href', liveBlobUrl);
+          btn.setAttribute('download', customName);
+        });
+      }
+    }).catch(() => {});
   }
-  return config.apkDownloadUrl || 'downloads/imov-v12.4-official.apk';
 }

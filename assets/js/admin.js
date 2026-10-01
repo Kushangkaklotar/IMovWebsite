@@ -1,6 +1,6 @@
 /**
  * IMovadmin - Portal Management Logic
- * Handles Authentication, APK Upload & File Inspection,
+ * Handles Authentication, APK Upload & IndexedDB Binary Persistence,
  * Specifications Customization, Real-Time Sync, and JSON Export/Import.
  */
 
@@ -88,7 +88,7 @@ function initAdminTabs() {
 /* ==========================================================================
    3. Load Stored Configuration into Form Inputs & Stats
    ========================================================================== */
-function loadConfigIntoForm() {
+async function loadConfigIntoForm() {
   const config = getSiteConfig();
 
   // Populate Dashboard Summary Metrics
@@ -100,9 +100,36 @@ function loadConfigIntoForm() {
   if (statVer) statVer.textContent = config.version || 'v12.4';
   if (statSize) statSize.textContent = config.fileSize || '24.8 MB';
   if (statOs) statOs.textContent = config.androidVersion ? config.androidVersion.split(' to ')[0] : 'Android 5.0+';
-  if (statSource) {
-    const isBlob = localStorage.getItem('imov_uploaded_apk_blob');
-    statSource.textContent = isBlob ? 'Uploaded APK' : 'Official Local';
+
+  // Check if we have an uploaded APK in IndexedDB
+  const fileBadge = document.getElementById('selected-file-badge');
+  const fileNameText = document.getElementById('selected-file-name');
+  const testDlBtn = document.getElementById('test-download-apk-btn');
+
+  if (typeof getApkFromIndexedDB === 'function') {
+    const storedApk = await getApkFromIndexedDB();
+    if (storedApk && storedApk.blob) {
+      if (statSource) statSource.textContent = 'Custom Uploaded APK';
+      if (fileBadge && fileNameText) {
+        fileNameText.innerHTML = `<strong>${storedApk.fileName}</strong> (${storedApk.fileSize || formatBytesToMB(storedApk.blob.size)}) - Active in Database!`;
+        fileBadge.style.display = 'inline-flex';
+      }
+      if (testDlBtn) {
+        testDlBtn.style.display = 'inline-flex';
+        testDlBtn.onclick = (e) => {
+          e.preventDefault();
+          const testUrl = URL.createObjectURL(storedApk.blob);
+          const a = document.createElement('a');
+          a.href = testUrl;
+          a.download = storedApk.fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        };
+      }
+    } else {
+      if (statSource) statSource.textContent = 'Official Default';
+    }
   }
 
   // Populate APK & Version Fields
@@ -141,13 +168,14 @@ function getVal(id) {
 }
 
 /* ==========================================================================
-   4. APK File Drag & Drop Uploader
+   4. APK File Drag & Drop Uploader with IndexedDB Persistence
    ========================================================================== */
 function initApkDropzone() {
   const dropzone = document.getElementById('apk-dropzone');
   const fileInput = document.getElementById('apk-file-input');
   const fileBadge = document.getElementById('selected-file-badge');
   const fileNameText = document.getElementById('selected-file-name');
+  const testDlBtn = document.getElementById('test-download-apk-btn');
 
   if (!dropzone || !fileInput) return;
 
@@ -177,38 +205,57 @@ function initApkDropzone() {
     }
   });
 
-  function handleApkFile(file) {
+  async function handleApkFile(file) {
     if (!file) return;
 
-    const sizeInMB = (file.size / (1024 * 1024)).toFixed(1) + ' MB';
+    const sizeInMB = formatBytesToMB(file.size);
     const fileName = file.name;
 
     // Try to parse version number from filename (e.g. IMov-v13.0.apk -> v13.0)
     const verMatch = fileName.match(/v\d+(\.\d+)*/i);
-    if (verMatch) {
-      setVal('input-app-version', verMatch[0]);
-      setVal('input-spec-version', verMatch[0]);
-    }
+    const detectedVer = verMatch ? verMatch[0] : (getVal('input-app-version') || 'v12.4');
 
+    setVal('input-app-version', detectedVer);
+    setVal('input-spec-version', detectedVer + ' (Latest 2026 Edition)');
     setVal('input-file-size', sizeInMB);
     setVal('input-spec-size', sizeInMB);
     setVal('input-apk-filename', fileName);
+    setVal('input-announcement', `⚡ LATEST RELEASE: IMOV ${detectedVer} Official APK (${sizeInMB}) — 4K Cinema Streaming & Ad-Free Player!`);
 
-    // Create a local blob download link for testing immediately
-    const blobUrl = URL.createObjectURL(file);
+    // Save binary file into IndexedDB
     try {
-      localStorage.setItem('imov_uploaded_apk_blob', blobUrl);
-      setVal('input-apk-download-url', blobUrl);
-    } catch (e) {
-      console.log('Stored blob URL reference');
-    }
+      if (typeof saveApkToIndexedDB === 'function') {
+        await saveApkToIndexedDB(file, {
+          fileName: fileName,
+          fileSize: sizeInMB,
+          version: detectedVer
+        });
+      }
 
-    if (fileBadge && fileNameText) {
-      fileNameText.textContent = `${fileName} (${sizeInMB})`;
-      fileBadge.style.display = 'inline-flex';
-    }
+      if (fileBadge && fileNameText) {
+        fileNameText.innerHTML = `<strong>${fileName}</strong> (${sizeInMB}) - Saved into Database!`;
+        fileBadge.style.display = 'inline-flex';
+      }
 
-    showAdminToast(`Selected APK: ${fileName} (${sizeInMB}). Click "Save & Publish" to update website.`);
+      if (testDlBtn) {
+        testDlBtn.style.display = 'inline-flex';
+        testDlBtn.onclick = (e) => {
+          e.preventDefault();
+          const testUrl = URL.createObjectURL(file);
+          const a = document.createElement('a');
+          a.href = testUrl;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        };
+      }
+
+      showAdminToast(`✅ APK stored in database: ${fileName} (${sizeInMB}). Click "Save & Publish" to update website.`);
+    } catch (err) {
+      console.error('Error saving APK to IndexedDB:', err);
+      showAdminToast(`Warning: Could not save APK to database. ${err.message}`);
+    }
   }
 }
 
@@ -221,7 +268,7 @@ function initFormSaveHandler() {
 
   if (!saveBtn) return;
 
-  saveBtn.addEventListener('click', (e) => {
+  saveBtn.addEventListener('click', async (e) => {
     e.preventDefault();
 
     const updatedConfig = {
@@ -256,8 +303,8 @@ function initFormSaveHandler() {
         `;
       }
 
-      loadConfigIntoForm();
-      showAdminToast('🚀 Changes published! All website sections updated.');
+      await loadConfigIntoForm();
+      showAdminToast('🚀 Changes published! Website download and specs updated.');
     } else {
       showAdminToast('❌ Error saving changes. Please check permissions.');
     }
@@ -291,11 +338,11 @@ function initExportImport() {
       if (importInput.files && importInput.files.length) {
         const file = importInput.files[0];
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
           try {
             const imported = JSON.parse(e.target.result);
             saveSiteConfig(imported);
-            loadConfigIntoForm();
+            await loadConfigIntoForm();
             showAdminToast('Successfully imported and restored configuration!');
           } catch (err) {
             alert('Invalid JSON file format.');
@@ -314,10 +361,13 @@ function initResetHandler() {
   const resetBtn = document.getElementById('reset-config-btn');
   if (!resetBtn) return;
 
-  resetBtn.addEventListener('click', () => {
-    if (confirm('Are you sure you want to reset all site details and specifications back to default values?')) {
+  resetBtn.addEventListener('click', async () => {
+    if (confirm('Are you sure you want to reset all site details, specifications, and uploaded APK back to default values?')) {
       resetSiteConfig();
-      loadConfigIntoForm();
+      if (typeof deleteApkFromIndexedDB === 'function') {
+        await deleteApkFromIndexedDB();
+      }
+      await loadConfigIntoForm();
       showAdminToast('Restored all settings back to default factory configuration.');
     }
   });

@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initMobileNav();
   initDownloadFlow();
   initInstallationTabs();
-  initCatalogTabs();
   initFaqAccordion();
   initRecentDownloadToasts();
   initBackToTop();
@@ -203,6 +202,11 @@ function initDownloadFlow() {
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 
+    // Refresh UI with latest config / uploaded APK metadata
+    if (typeof syncUIWithConfig === 'function') {
+      syncUIWithConfig();
+    }
+
     // Reset modal state
     let count = 5;
     countdownNumber.textContent = count;
@@ -248,12 +252,25 @@ function initDownloadFlow() {
     }, 1000);
   }
 
-  function triggerActualDownload() {
+  async function triggerActualDownload() {
     const config = typeof getSiteConfig === 'function' ? getSiteConfig() : null;
-    const apkUrl = typeof getActiveApkDownloadUrl === 'function' 
+    let apkUrl = typeof getActiveApkDownloadUrl === 'function' 
       ? getActiveApkDownloadUrl(config) 
       : 'downloads/imov-v12.4-official.apk';
-    const fileName = (config && config.apkFileName) ? config.apkFileName : 'IMov-v12.4-Official.apk';
+    let fileName = (config && config.apkFileName) ? config.apkFileName : 'IMov-v12.4-Official.apk';
+
+    // Prioritize real uploaded APK binary from IndexedDB if available
+    if (typeof getApkFromIndexedDB === 'function') {
+      try {
+        const stored = await getApkFromIndexedDB();
+        if (stored && stored.blob) {
+          apkUrl = URL.createObjectURL(stored.blob);
+          if (stored.fileName) fileName = stored.fileName;
+        }
+      } catch (err) {
+        console.warn('Could not retrieve APK from IndexedDB, falling back to URL:', err);
+      }
+    }
 
     const tempAnchor = document.createElement('a');
     tempAnchor.href = apkUrl;
@@ -293,34 +310,6 @@ function initDownloadFlow() {
       if (e.target === modal) closeDownloadModal();
     });
   }
-
-  // QR Code Modal handling
-  const qrModal = document.getElementById('qr-modal');
-  const qrTriggers = document.querySelectorAll('.trigger-qr-modal');
-  const qrCloseBtn = document.getElementById('qr-modal-close-btn');
-
-  qrTriggers.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (qrModal) {
-        qrModal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-      }
-    });
-  });
-
-  if (qrCloseBtn && qrModal) {
-    qrCloseBtn.addEventListener('click', () => {
-      qrModal.classList.remove('active');
-      document.body.style.overflow = '';
-    });
-    qrModal.addEventListener('click', (e) => {
-      if (e.target === qrModal) {
-        qrModal.classList.remove('active');
-        document.body.style.overflow = '';
-      }
-    });
-  }
 }
 
 /* ==========================================================================
@@ -343,35 +332,6 @@ function initInstallationTabs() {
       if (activePane) {
         activePane.classList.add('active');
       }
-    });
-  });
-}
-
-/* ==========================================================================
-   6. Content Catalog Showcase Tabs & Filters
-   ========================================================================== */
-function initCatalogTabs() {
-  const filterBtns = document.querySelectorAll('.catalog-tab-btn');
-  const catalogItems = document.querySelectorAll('.movie-poster-card');
-
-  if (!filterBtns.length) return;
-
-  filterBtns.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      filterBtns.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const filter = btn.getAttribute('data-filter');
-
-      catalogItems.forEach((card) => {
-        const category = card.getAttribute('data-category');
-        if (filter === 'all' || category === filter) {
-          card.style.display = 'block';
-          card.style.animation = 'fadeIn 0.4s ease';
-        } else {
-          card.style.display = 'none';
-        }
-      });
     });
   });
 }
